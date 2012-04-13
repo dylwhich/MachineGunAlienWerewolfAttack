@@ -25,7 +25,11 @@ void Dynamite::onTick()
 
 void Dynamite::onTouch(Entity* e)
 {
-    if (e->getType()==PLAYER) setHealth(0);
+    if (e->getType()==PLAYER)
+    {
+        e->damage(3);
+        setHealth(0);
+    }
 }
 
 int Dynamite::getType()

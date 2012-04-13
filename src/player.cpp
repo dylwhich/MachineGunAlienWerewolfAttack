@@ -21,20 +21,18 @@ Player::~Player()
 
 void Player::onTouch(Entity* e)
 {
-    if (e->getType()==Entity::DYNAMITE)
+    switch(e->getType())
     {
-        damage(3);
-        e->setHealth(0);
-    } else if (e->getType()==Entity::COIN)
-    {
-        coins++;
-        if ((getCoins()%50)==0) heal(2);
-        e->setHealth(0);
-    } else if (e->getType()==Entity::APPLE)
-    {
-        heal(1);
-        e->setHealth(0);
-    } else if (e->getType()==Entity::TUTORIAL) e->setHealth(0);
+        case COIN:
+            coins++;
+            if ((getCoins()%50)==0) heal(2);
+        break;
+        case APPLE:
+            heal(1);
+        break;
+        default:
+        break;
+    }
 }
 
 void Player::onTick()
