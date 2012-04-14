@@ -2,24 +2,19 @@
 
 const int Entity::MAX_X = 640;
 const int Entity::MAX_Y = 480;
-
-/*const int Entity::COIN = 1;
-const int Entity::PLAYER = 2;
-const int Entity::DYNAMITE = 3;
-const int Entity::APPLE = 4;
-const int Entity::ARMOR = 5;
-const int Entity::TUTORIAL = 6;
-const int Entity::AMBIENT = 7;*/
+int Entity::MAX_ID = 0;
+std::vector<Entity*> Entity::ALL_ENTITIES;
 
 Entity::Entity()
 {
-    //ctor
+    init();
 }
 
 Entity::Entity(int xPos, int yPos)
 {
     x = xPos;
     y = yPos;
+    init();
 }
 
 Entity::~Entity()
@@ -98,4 +93,39 @@ bool Entity::collides(Entity* e)
     (y > e->getY() + e->getHeight() - 1) || // is b1 under b2?
     (e->getX() > x + getWidth() - 1) || // is b2 on the right side of b1?
     (e->getY() > y + getHeight() - 1));   // is b2 under b1?
+}
+
+void Entity::updateID(unsigned int newID)
+{
+    id = newID;
+}
+
+void Entity::init()
+{
+    ALL_ENTITIES.push_back(this);
+    id = MAX_ID++;
+}
+
+void Entity::remove()
+{
+    if (id != -1)
+    {
+        MAX_ID--;
+        ALL_ENTITIES.erase(ALL_ENTITIES.begin()+id);
+        for (unsigned int i=0;i<ALL_ENTITIES.size();i++)
+        {
+            ALL_ENTITIES.at(i)->updateID(i);
+        }
+        id = -1;
+    }
+}
+
+bool Entity::cull()
+{
+    if (x+display->w<0 || y>MAX_Y || health==0)
+    {
+        remove();
+        return true;
+    }
+    return false;
 }

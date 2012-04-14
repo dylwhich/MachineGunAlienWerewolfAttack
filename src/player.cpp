@@ -5,13 +5,17 @@ Player::Player()
     setFloorHeight(448);
     setHealth(getMaxHealth());
     armorLevel=0;
+    shotTimer = 0;
 }
 
-Player::Player(int xPos, int yPos) : Entity(xPos,yPos)
+Player::Player(int xPos, int yPos)// : Entity(xPos,yPos)
 {
     setFloorHeight(448);
     coins = 0;
     setHealth(getMaxHealth());
+    setX(xPos);
+    setY(yPos); //not inherited from Entity constructor because I don't want it to init()
+    shotTimer = 0;
 }
 
 Player::~Player()
@@ -24,11 +28,7 @@ void Player::onTouch(Entity* e)
     switch(e->getType())
     {
         case COIN:
-            coins++;
-            if ((getCoins()%50)==0) heal(2);
-        break;
-        case APPLE:
-            heal(1);
+            collectCoin();
         break;
         default:
         break;
@@ -37,6 +37,7 @@ void Player::onTouch(Entity* e)
 
 void Player::onTick()
 {
+    if (shotTimer>0) shotTimer--;
     if (jumping) setY(getY()-40);
     if (getY()<floorHeight) setY(getY()+4*jumpTicks++);
     if (getY()>floorHeight) setY(floorHeight);
@@ -61,6 +62,7 @@ int Player::getCoins()
 void Player::collectCoin()
 {
     coins++;
+    if ((getCoins()%50)==0) heal(2);
 }
 
 void Player::setFloorHeight(int height)
@@ -83,4 +85,15 @@ int Player::damage(int points)
 {
     setHealth(getHealth()-(points-armorLevel));
     return getHealth();
+}
+
+bool Player::fire()
+{
+    if (shotTimer==0)
+    {
+        shotTimer = 19;
+        return true;
+        //new Bullet(getX()+getWidth(),getY()+10)->setDisplay(load_bitmap("../img/fireball.bmp"));
+    }
+    return false;
 }

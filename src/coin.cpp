@@ -20,12 +20,16 @@ Coin::Coin(int xPos, int yPos) : Entity::Entity(xPos,yPos)
 
 Coin::~Coin()
 {
-    //dtor
+
 }
 
 void Coin::onTouch(Entity* e)
 {
-    if (e->getType()==PLAYER) setHealth(0);
+    if (e->getType()==PLAYER)
+    {
+//        ((Player*)e)->collectCoin();
+        remove();
+    }
 }
 
 void Coin::onTick()

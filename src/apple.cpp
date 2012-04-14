@@ -14,7 +14,7 @@ Apple::Apple(int xPos, int yPos) : Entity::Entity(xPos,yPos)
 
 Apple::~Apple()
 {
-    //dtor
+
 }
 
 void Apple::onTick()
@@ -24,7 +24,11 @@ void Apple::onTick()
 
 void Apple::onTouch(Entity* e)
 {
-    if (e->getType()==PLAYER) setHealth(0);
+    if (e->getType()==PLAYER)
+    {
+        remove();
+        e->heal(1);
+    }
 }
 
 int Apple::getType()

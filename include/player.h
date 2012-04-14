@@ -2,7 +2,7 @@
 #define PLAYER_H
 
 #include "../include/entity.h"
-
+#include "../include/bullet.h"
 
 class Player : public Entity
 {
@@ -20,9 +20,10 @@ class Player : public Entity
         void toggleJumping(bool val);
         bool isJumping();
         int damage(int points);
+        bool fire();
     protected:
     private:
-        int coins, floorHeight, jumpTicks, armorLevel;
+        int coins, floorHeight, jumpTicks, armorLevel, shotTimer;
         bool jumping;
 };
 

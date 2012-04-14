@@ -2,6 +2,7 @@
 #define COIN_H
 
 #include "../include/entity.h"
+//#include "../include/player.h"
 
 class Coin : public Entity
 {

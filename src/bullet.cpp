@@ -2,7 +2,7 @@
 
 Bullet::Bullet()
 {
-    //ctor
+    init();
 }
 
 Bullet::Bullet(int xPos, int yPos) : Entity::Entity(xPos,yPos)
@@ -24,7 +24,7 @@ void Bullet::onTick()
 void Bullet::onTouch(Entity* e)
 {
     e->damage(2);
-    setHealth(0);
+    remove();
 }
 
 int Bullet::getType()

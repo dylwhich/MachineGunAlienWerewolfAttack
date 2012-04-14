@@ -20,6 +20,7 @@ class Tutorial : public Entity
         bool done;
         int leftBound;
         int yFloat;
+        int lifeEnd;
 };
 
 #endif // TUTORIAL_H

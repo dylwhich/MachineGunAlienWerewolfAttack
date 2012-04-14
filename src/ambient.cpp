@@ -6,6 +6,7 @@ Ambient::Ambient(BITMAP* disp)
     setY(0);
     setDisplay(disp);
     setHealth(getMaxHealth());
+    init();
 }
 
 Ambient::~Ambient()
@@ -16,6 +17,7 @@ Ambient::~Ambient()
 void Ambient::onTick()
 {
     setX(getX()-5);
+    if (getX()+getWidth()<=0) setX(MAX_X+800);
 }
 
 void Ambient::onTouch(Entity* e)

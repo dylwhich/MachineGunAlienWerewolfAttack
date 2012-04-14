@@ -11,6 +11,7 @@ Tutorial::Tutorial(BITMAP* disp, int minX, int yPos)
     leftBound = minX;
     yFloat = yPos;
     setY(yPos);
+    lifeEnd = -1;
 }
 
 Tutorial::~Tutorial()
@@ -20,6 +21,7 @@ Tutorial::~Tutorial()
 
 void Tutorial::onTick()
 {
+    if (lifetime==lifeEnd) remove();
     if (getX()>(leftBound)) setX(getX()-4);
     else setY((int)(/*MAX_Y-180-getHeight()/2*/yFloat+4*sin(lifetime++/4.0)));
 }
@@ -28,8 +30,8 @@ void Tutorial::onTouch(Entity* e)
 {
     if (e->getType()==Entity::PLAYER || e->getType()==Entity::BULLET)
     {
-        setHealth(0);
         done = true;
+        lifeEnd = lifetime+1;
     }
 }
 

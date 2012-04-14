@@ -2,20 +2,16 @@
 #define ENTITY_H
 
 #include <allegro.h>
+#include <vector>
 
 class Entity
 {
     public:
         static const int MAX_X;
         static const int MAX_Y;
+        static int MAX_ID;
+        static std::vector<Entity*> ALL_ENTITIES;
         enum { COIN, PLAYER, DYNAMITE, APPLE, ARMOR, TUTORIAL, AMBIENT, BULLET };
-        /*static const int COIN;
-        static const int PLAYER;
-        static const int DYNAMITE;
-        static const int APPLE;
-        static const int ARMOR;
-        static const int TUTORIAL;
-        static const int AMBIENT;*/
 
         Entity();
         Entity(int xPos, int yPos);
@@ -37,8 +33,13 @@ class Entity
         Entity* setDisplay(BITMAP* newDisplay);
         BITMAP* getDisplay();
         bool collides(Entity* e);
+        void remove();
+        bool     cull();
     protected:
+        void updateID(unsigned int newID);
+        void init();
     private:
+        unsigned int id;
         int x, y, health;
         BITMAP* display;
 };

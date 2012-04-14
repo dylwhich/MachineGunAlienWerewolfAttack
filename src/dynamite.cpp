@@ -14,7 +14,7 @@ Dynamite::Dynamite(int xPos, int yPos) : Entity(xPos,yPos)
 
 Dynamite::~Dynamite()
 {
-    //dtor
+
 }
 
 void Dynamite::onTick()
@@ -28,7 +28,7 @@ void Dynamite::onTouch(Entity* e)
     if (e->getType()==PLAYER)
     {
         e->damage(3);
-        setHealth(0);
+        remove();
     }
 }
 
