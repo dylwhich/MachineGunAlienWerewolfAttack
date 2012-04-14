@@ -62,8 +62,10 @@ int main()
     int playerOffset = (SCREEN_W-playerSprite->w)/2;
     int cartOffset = (SCREEN_W-cart->w)/2;
     int bottomHeight = SCREEN_H-playerSprite->h;
-    int lastAmbient = 0, lastShot = 0;
+    int lastAmbient = 0, shotTimer = 0;
     int tutorialProgress = 0;
+    bool paused = false;
+    int pauseTimer = 0;
 
     Player* player = new Player((SCREEN_W-playerSprite->w)/2,bottomHeight-playerSprite->h);
     player->setDisplay(playerSprite);
@@ -78,82 +80,112 @@ int main()
     while (!key[KEY_ESC] && player->getHealth() > 0)
     {
         //acquire_screen();
-        if (key[KEY_W] || key[KEY_UP]) player->setY(player->getY()-5);
-        else if (key[KEY_S] || key[KEY_DOWN]) player->setY(player->getY()+5);
-
-        if (key[KEY_SPACE] xor player->isJumping()) player->toggleJumping(key[KEY_SPACE]);
-
-        clear_to_color(buffer, 0x000000);
-        for (unsigned int i=0; i<sprites.size();i++)
+        if (paused)
         {
-            Entity* curr = sprites.at(i);
-            if (player->collides(curr))
+            //BITMAP* pauseBuffer;
+            //blit(buffer, pauseBuffer, 0, 0, 0, 0, SCREEN_H, SCREEN_W);
+            if (pauseTimer<20) pauseTimer++;
+            if (key[KEY_P] && pauseTimer==20) paused = false;
+            clear_keybuf();
+            rest(80);
+        } else
+        {
+            if (pauseTimer>0) pauseTimer--;
+            if (key[KEY_W] || key[KEY_UP]) player->setY(player->getY()-5);
+
+            else if (key[KEY_S] || key[KEY_DOWN]) player->setY(player->getY()+5);
+
+            if (key[KEY_SPACE] xor player->isJumping()) player->toggleJumping(key[KEY_SPACE]);
+
+            clear_to_color(buffer, 0x000000);
+            textprintf_ex(buffer, font, 0, 40, 0xFFFFFF, -1, "%d",pauseTimer);
+            if (key[KEY_P] && pauseTimer==0)
             {
-                curr->onTouch(player);
-                player->onTouch(curr);
+                paused = true;
+                //blit(buffer, pauseBuffer, 0, 0, 0, 0, SCREEN_H, SCREEN_W);
+                textout_ex(buffer, font, "GAME PAUSED", 0, 80, 0xFF0000, -1);
             }
-            for (unsigned int j=0;j<sprites.size();j++) //I'm completely amazed that this doesn't slow down the program excessively
+                //begin sprite calculation block
+            for (unsigned int i=0; i<sprites.size();i++)
             {
-                if (j==i /*|| sprites.at(j)->getType()!=Entity::BULLET*/) continue;
-                if (sprites.at(j)->collides(curr))
+                Entity* curr = sprites.at(i);
+
+                if (player->collides(curr))
                 {
-                    curr->onTouch(sprites.at(j));
-                    sprites.at(j)->onTouch(curr);
+                    curr->onTouch(player);
+                    player->onTouch(curr);
+                }
+                    //calculate this entity with reference to *every* other entity in the list
+                for (unsigned int j=0;j<sprites.size();j++) //I'm completely amazed that this doesn't slow down the program excessively
+                {
+                    if (j==i) continue;
+                    if (sprites.at(j)->collides(curr))
+                    {
+                        curr->onTouch(sprites.at(j));
+                        sprites.at(j)->onTouch(curr);
+                    }
+                }
+
+                    //if the current tutorial is done and it is the first one, spawn the second
+                if (curr->getType()==Entity::TUTORIAL && ((Tutorial*)curr)->isDone() && ++tutorialProgress==1) sprites.push_back(tutorialTwo);
+
+                    //erase sprites off the screen to the left and bottom, and with no health
+                if (curr->getHealth()==0 || (curr->getX()+curr->getWidth())<0 || curr->getY()>SCREEN_H)
+                {
+                    sprites.erase(sprites.begin()+i);
+                } else  //only draw the sprite if it is not being moved
+                draw_sprite(buffer, curr->getDisplay(), curr->getX(), curr->getY());
+
+                curr->onTick();
+            }   //end sprite calculation block
+
+                //draw all the player's hearts and wrap if needed
+            for (int i=0;i<player->getMaxHealth();i++)
+            {
+                draw_sprite(buffer, (player->getHealth()>i)?heart:emptyheart, (i%40)*(heart->w+1), 20+(heart->h+1)*(i/40));
+            }
+            player->onTick();
+
+                //once the first tutorial is complete, the player is allowed to shoot things
+            if (tutorialProgress>0)
+            {
+                if (key[KEY_F] && shotTimer==0)
+                {
+                    sprites.push_back((new Bullet(player->getX()+player->getWidth()+fireball->w,player->getY()-10))->setDisplay(fireball));
+                    lastShot = 19;
+                }
+                    //cheaty cheats
+                if (key[KEY_C] || key[KEY_Y] || key[KEY_L])
+                {
+                    if (key[KEY_C]) sprites.push_back((new Coin(player->getX()+2*player->getWidth(),player->getY()))->setDisplay(coin));
+                    else if (key[KEY_Y]) sprites.push_back((new Dynamite(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(dynamite));
+                    else if (key[KEY_L]) sprites.push_back((new Apple(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(apple));
+                } else if (tutorialProgress>1)  //once both tutorials are done entities will start spawning on their own
+                {
+                    int makeSprite = rand()%500;
+                    if (makeSprite<20) sprites.push_back((new Coin(SCREEN_W+1,bottomHeight-rand()%180))->setDisplay(coin));
+                    else if (makeSprite<23) sprites.push_back((new Dynamite(SCREEN_W+1, bottomHeight-rand()%180))->setDisplay(dynamite));
+                    else if (makeSprite<24) sprites.push_back((new Apple(SCREEN_W+1, bottomHeight-rand()%180))->setDisplay(apple));
                 }
             }
-
-
-            if (curr->getType()==Entity::TUTORIAL && ((Tutorial*)curr)->isDone() && ++tutorialProgress==1) sprites.push_back(tutorialTwo);
-            if (curr->getHealth()==0 || (curr->getX()+curr->getWidth())<0 || curr->getY()>SCREEN_H)
+            lastAmbient++;
+            if (shotTimer>0) shotTimer--;
+            if (lastAmbient==200)
             {
-                sprites.erase(sprites.begin()+i);
-            } else
-            draw_sprite(buffer, curr->getDisplay(), curr->getX(), curr->getY());
-            curr->onTick();
-        }
-
-        for (int i=0;i<player->getMaxHealth();i++)
-        {
-            draw_sprite(buffer, (player->getHealth()>i)?heart:emptyheart, (i%40)*(heart->w+1), 20+(heart->h+1)*(i/40));
-        }
-        player->onTick();
-        if (tutorialProgress>0)
-        {
-            if (key[KEY_F] && lastShot>19)
-            {
-                sprites.push_back((new Bullet(player->getX()+player->getWidth()+fireball->w,player->getY()-10))->setDisplay(fireball));
-                lastShot = 0;
+                sprites.push_back(new Ambient(lamp));
+                lastAmbient=0;
             }
-            if (key[KEY_C] || key[KEY_Y] || key[KEY_L])
-            {
-                if (key[KEY_C]) sprites.push_back((new Coin(player->getX()+2*player->getWidth(),player->getY()))->setDisplay(coin));
-                else if (key[KEY_Y]) sprites.push_back((new Dynamite(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(dynamite));
-                else if (key[KEY_L]) sprites.push_back((new Apple(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(apple));
-            } else if (tutorialProgress>1)
-            {
-                int makeSprite = rand()%500;
-                if (makeSprite<20) sprites.push_back((new Coin(SCREEN_W+1,bottomHeight-rand()%180))->setDisplay(coin));
-                else if (makeSprite<23) sprites.push_back((new Dynamite(SCREEN_W+1, bottomHeight-rand()%180))->setDisplay(dynamite));
-                else if (makeSprite<24) sprites.push_back((new Apple(SCREEN_W+1, bottomHeight-rand()%180))->setDisplay(apple));
-            }
+            draw_sprite(buffer, player->getDisplay(), player->getX(), player->getY());
+            draw_sprite(buffer, helmet, player->getX()+player->getWidth()/2-helmet->w/2, player->getY()-5);
+            draw_sprite(buffer, chestplate, player->getX()+player->getWidth()/2-chestplate->w/2, player->getY()+8);
+            draw_sprite(buffer, cart, cartOffset, bottomHeight+16);
+            textprintf_ex(buffer, font, 5, 5, 0xFFFFFF, -1, "Coins: %d", player->getCoins());
+            acquire_screen();
+            blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
+            release_screen();
+            clear_keybuf();
+            rest(5);
         }
-        lastAmbient++;
-        lastShot++;
-        if (lastAmbient==200)
-        {
-            sprites.push_back(new Ambient(lamp));
-            lastAmbient=0;
-        }
-        draw_sprite(buffer, player->getDisplay(), player->getX(), player->getY());
-        draw_sprite(buffer, helmet, player->getX()+player->getWidth()/2-helmet->w/2, player->getY()-5);
-        draw_sprite(buffer, chestplate, player->getX()+player->getWidth()/2-chestplate->w/2, player->getY()+8);
-        draw_sprite(buffer, cart, cartOffset, bottomHeight+16);
-        textprintf_ex(buffer, font, 5, 5, 0xFFFFFF, -1, "Coins: %d", player->getCoins());
-        acquire_screen();
-        blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
-        release_screen();
-        clear_keybuf();
-        rest(5);
     }
     if (player->getHealth() <= 0)
     {
