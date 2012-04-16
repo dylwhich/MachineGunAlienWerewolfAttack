@@ -3,6 +3,13 @@
 
 #include <allegro.h>
 #include <vector>
+#include <list>
+
+struct Addon
+{
+    BITMAP* disp;
+    int xOffset, yOffset;
+};
 
 class Entity
 {
@@ -11,7 +18,7 @@ class Entity
         static const int MAX_Y;
         static int MAX_ID;
         static std::vector<Entity*> ALL_ENTITIES;
-        enum { COIN, PLAYER, DYNAMITE, APPLE, ARMOR, TUTORIAL, AMBIENT, BULLET };
+        enum { COIN, PLAYER, DYNAMITE, APPLE, ARMOR, TUTORIAL, AMBIENT, BULLET, ZOMBIE };
 
         Entity();
         Entity(int xPos, int yPos);
@@ -34,11 +41,18 @@ class Entity
         BITMAP* getDisplay();
         bool collides(Entity* e);
         void remove();
-        bool     cull();
+        bool cull();
+        void attachSprite(BITMAP* b, int xOff, int yOff);
+        bool hasNextAddon();
+        Addon nextAddon();
+        void resetAddons();
+        virtual void interact(Entity* e)=0;
     protected:
         void updateID(unsigned int newID);
         void init();
     private:
+        std::list<Addon>::iterator addonIt;
+        std::list<Addon> addons;
         unsigned int id;
         int x, y, health;
         BITMAP* display;

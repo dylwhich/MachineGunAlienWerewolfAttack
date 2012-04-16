@@ -122,10 +122,33 @@ void Entity::remove()
 
 bool Entity::cull()
 {
-    if (x+display->w<0 || y>MAX_Y || health==0)
+    if (x+display->w<0 || y>MAX_Y || x>MAX_X || health==0)
     {
         remove();
         return true;
     }
     return false;
+}
+
+void Entity::attachSprite(BITMAP* b, int xOff, int yOff)
+{
+    bool reset = false;
+    if (addons.empty()) reset = true;
+    addons.push_back(Addon {b, xOff, yOff});
+    if (reset) resetAddons();
+}
+
+bool Entity::hasNextAddon()
+{
+    return addonIt==addons.end();
+}
+
+Addon Entity::nextAddon()
+{
+    return *addonIt++;
+}
+
+void Entity::resetAddons()
+{
+    addonIt=addons.begin();
 }

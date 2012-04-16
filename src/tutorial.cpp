@@ -5,7 +5,7 @@ Tutorial::Tutorial(BITMAP* disp, int minX, int yPos)
 {
     setDisplay(disp);
     lifetime = 0;
-    setX(Entity::MAX_X+1);
+    setX(Entity::MAX_X);
     done = false;
     setHealth(getMaxHealth());
     leftBound = minX;
@@ -22,7 +22,7 @@ Tutorial::~Tutorial()
 void Tutorial::onTick()
 {
     if (lifetime==lifeEnd) remove();
-    if (getX()>(leftBound)) setX(getX()-4);
+    if (getX()>(leftBound)) setX(getX()-8);
     else setY((int)(/*MAX_Y-180-getHeight()/2*/yFloat+4*sin(lifetime++/4.0)));
 }
 
@@ -48,4 +48,9 @@ int Tutorial::getMaxHealth()
 bool Tutorial::isDone()
 {
     return done;
+}
+
+void Tutorial::interact(Entity* e)
+{
+    //do nothing
 }

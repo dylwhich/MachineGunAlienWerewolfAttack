@@ -14,6 +14,7 @@ class Tutorial : public Entity
         int getType();
         int getMaxHealth();
         bool isDone();
+        void interact(Entity* e);
     protected:
     private:
         int lifetime;

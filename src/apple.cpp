@@ -40,3 +40,8 @@ int Apple::getMaxHealth()
 {
     return 1;
 }
+
+void Apple::interact(Entity* e)
+{
+    //do nothing
+}

@@ -16,6 +16,7 @@ Player::Player(int xPos, int yPos)// : Entity(xPos,yPos)
     setX(xPos);
     setY(yPos); //not inherited from Entity constructor because I don't want it to init()
     shotTimer = 0;
+    attracting = false;
 }
 
 Player::~Player()
@@ -91,9 +92,20 @@ bool Player::fire()
 {
     if (shotTimer==0)
     {
-        shotTimer = 19;
+        shotTimer = 10;
         return true;
         //new Bullet(getX()+getWidth(),getY()+10)->setDisplay(load_bitmap("../img/fireball.bmp"));
     }
     return false;
+}
+
+void Player::interact(Entity* e)
+{
+    if (attracting)
+    {
+        if (getX()<e->getX()) e->setX(e->getX()-rand()%10);
+        else e->setX(e->getX()+rand()%10);
+        if (getY()<e->getY()) e->setY(e->getY()-rand()%10);
+        else e->setY(e->getY()+rand()%10);
+    }
 }

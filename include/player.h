@@ -14,6 +14,7 @@ class Player : public Entity
         void onTick();
         int getType();
         int getMaxHealth();
+        void interact(Entity* e);
         int getCoins();
         void collectCoin();
         void setFloorHeight(int height);
@@ -21,6 +22,7 @@ class Player : public Entity
         bool isJumping();
         int damage(int points);
         bool fire();
+        bool attracting;
     protected:
     private:
         int coins, floorHeight, jumpTicks, armorLevel, shotTimer;

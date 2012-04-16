@@ -13,8 +13,10 @@ class Ambient : public Entity
         void onTouch(Entity* e);
         int getType();
         int getMaxHealth();
+        void interact(Entity* e);
     protected:
     private:
+        int waitTime;
 };
 
 #endif // AMBIENT_H

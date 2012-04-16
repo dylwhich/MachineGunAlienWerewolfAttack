@@ -1,4 +1,4 @@
-#include <allegro.h>
+    #include <allegro.h>
 #include "./include/player.h"
 #include "./include/dynamite.h"
 #include "./include/apple.h"
@@ -7,8 +7,33 @@
 #include "./include/tutorial.h"
 #include "./include/ambient.h"
 #include "./include/bullet.h"
+#include "./include/zombie.h"
 #include <vector>
 #include <iostream>
+
+/*BITMAP *load_sprite(const char* filename) {
+   BITMAP *tmp, *ret;
+
+   // convert the sprite to current format, unless it would lose alpha information
+   set_color_conversion(COLORCONV_KEEP_ALPHA);
+   tmp = load_bitmap(filename, NULL);
+
+   // create a video bitmap of the same size and same color depth as the sprite
+   //allegro_gl_set_video_bitmap_color_depth(bitmap_color_depth(tmp));
+   ret = create_video_bitmap(tmp->w, tmp->h);
+   //allegro_gl_set_video_bitmap_color_depth(-1);
+
+   // blit a memory sprite to a video bitmap
+   blit(tmp, ret, 0, 0, 0, 0, tmp->w, tmp->h);
+
+   destroy_bitmap(tmp);
+   return ret;
+}*/
+
+BITMAP* load_sprite(const char* filename)
+{
+    return load_bitmap(filename, NULL);
+}
 
 int main()
 {
@@ -19,37 +44,48 @@ int main()
 
     set_gfx_mode( GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
     set_color_depth(16);
+    //std::cout << ALLEGRO_VERSION_STR << std::endl;
+    //set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP);
+
+    /*PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
+    al_append_path_component(path, "img");
+    al_change_directory(al_path_cstr(path, '/'));  // change the working directory
+    al_destroy_path(path);*/
 
     BITMAP* buffer;
     buffer = create_bitmap(SCREEN_W,SCREEN_H);
-    BITMAP* playerSprite = load_bitmap("img/player.bmp", NULL);
-    BITMAP* cart = load_bitmap("img/minecart.bmp", NULL);
-    BITMAP* apple = load_bitmap("img/apple.bmp", NULL);
-    BITMAP* coin = load_bitmap("img/coin.bmp", NULL);
-    BITMAP* dynamite = load_bitmap("img/dynamite.bmp", NULL);
-    BITMAP* heart = load_bitmap("img/heart.bmp", NULL);
-    BITMAP* emptyheart = load_bitmap("img/emptyheart.bmp", NULL);
-    BITMAP* gameover = load_bitmap("img/gameover.bmp", NULL);
-    BITMAP* tutorial1 = load_bitmap("img/tutorial1.bmp", NULL);
-    //BITMAP* hook = load_bitmap("img/grapplinghook.bmp", NULL);
-    //BITMAP* shaft = load_bitmap("img/grapplingshaft.bmp", NULL);
-    //BITMAP* head = load_bitmap("img/grapplinghead.bmp", NULL);
-    BITMAP* helmet = load_bitmap("img/helmet.bmp", NULL);
-    BITMAP* chestplate = load_bitmap("img/chestplate.bmp", NULL);
-    BITMAP* lamp = load_bitmap("img/lamp.bmp", NULL);
-    BITMAP* fireball = load_bitmap("img/fireball.bmp", NULL);
+    BITMAP* playerSprite = load_sprite("img/player.bmp");
+    BITMAP* cart = load_sprite("img/minecart.bmp");
+    BITMAP* apple = load_sprite("img/apple.bmp");
+    BITMAP* coin = load_sprite("img/coin.bmp");
+    BITMAP* dynamite = load_sprite("img/dynamite.bmp");
+    BITMAP* heart = load_sprite("img/heart.bmp");
+    BITMAP* emptyheart = load_sprite("img/emptyheart.bmp");
+    BITMAP* gameover = load_sprite("img/gameover.bmp");
+    BITMAP* tutorial1 = load_sprite("img/tutorial1.bmp");
+    //BITMAP* hook = load_sprite("img/grapplinghook.bmp");
+    //BITMAP* shaft = load_sprite("img/grapplingshaft.bmp");
+    //BITMAP* head = load_sprite("img/grapplinghead.bmp");
+    BITMAP* helmet = load_sprite("img/helmet.bmp");
+    BITMAP* chestplate = load_sprite("img/chestplate.bmp");
+    BITMAP* lamp = load_sprite("img/lamp.bmp");
+    BITMAP* fireball = load_sprite("img/fireball.bmp");
+    BITMAP* zombie = load_sprite("img/grapplinghook.bmp");
 
     int cartOffset = (SCREEN_W-cart->w)/2;
     int bottomHeight = SCREEN_H-playerSprite->h;
     int tutorialProgress = 0;
     bool paused = false;
     int pauseTimer = 0;
-    srand(time(0));
+    int floorTickTimer = 10;
+    //srand(time(0));
 
-    Player* player = new Player((SCREEN_W-playerSprite->w)/2,bottomHeight-playerSprite->h);
+    Player* player = new Player(32/*(SCREEN_W-playerSprite->w)/2*/,bottomHeight-playerSprite->h);
     player->setDisplay(playerSprite);
+    player->attachSprite(helmet, (player->getWidth()-helmet->w)/2, -5);
+    //player->attachSprite(chestplate, ))
 
-    new Tutorial(tutorial1,(SCREEN_W-tutorial1->w)/2,SCREEN_H-180-tutorial1->h/2);
+    new Tutorial(tutorial1,0/*(SCREEN_W-tutorial1->w)/2*/,SCREEN_H-180-tutorial1->h/2);
     new Ambient(lamp);
 
     while (!key[KEY_ESC] && player->getHealth() > 0)
@@ -64,10 +100,17 @@ int main()
         } else
         {
             if (pauseTimer>0) pauseTimer--;
+            if (floorTickTimer>0) floorTickTimer--;
+            else
+            {
+                floorTickTimer=20;
+                player->setFloorHeight(bottomHeight--);
+            }
             //if (key[KEY_W] || key[KEY_UP]) player->setY(player->getY()-5);
             //else if (key[KEY_S] || key[KEY_DOWN]) player->setY(player->getY()+5);
 
             if (key[KEY_SPACE] xor player->isJumping()) player->toggleJumping(key[KEY_SPACE]);
+            if (key[KEY_LCONTROL] xor player->attracting) player->attracting=key[KEY_LCONTROL];
 
             clear_to_color(buffer, 0x000000);
             if (key[KEY_P] && pauseTimer==0)
@@ -92,6 +135,8 @@ int main()
                             curr->onTouch(target);
                             target->onTouch(curr);
                         }
+                        curr->interact(target);
+                        target->interact(curr);
                     }
 
                         //if the current tutorial is done and it is the first one, spawn the second
@@ -113,7 +158,7 @@ int main()
                 //once the first tutorial is complete, the player is allowed to shoot things
             if (tutorialProgress>0)
             {
-                if (key[KEY_F] && player->fire()) (new Bullet(player->getX()+player->getWidth(),player->getY()+10))->setDisplay(fireball);
+                if ((key[KEY_UP] || key[KEY_DOWN] || key[KEY_LEFT] || key[KEY_RIGHT]) && (player->fire() || key[KEY_LSHIFT])) (new Bullet(player->getX()+player->getWidth()-key[KEY_LEFT]?(player->getWidth()+fireball->w+2):0,player->getY()+3,key[KEY_LEFT]-key[KEY_RIGHT],key[KEY_UP]-key[KEY_DOWN]))->setDisplay(fireball);
                     //cheaty cheats
                 if (key[KEY_C] || key[KEY_Y] || key[KEY_L])
                 {
@@ -122,18 +167,49 @@ int main()
                     if (key[KEY_C]) (new Coin(player->getX()+2*player->getWidth(),player->getY()))->setDisplay(coin);
                     else if (key[KEY_Y]) (new Dynamite(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(dynamite);
                     else if (key[KEY_L]) (new Apple(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(apple);
-                } else if (tutorialProgress>1)  //once both tutorials are done entities will start spawning on their own
+                } else if (tutorialProgress>2)  //once both tutorials are done entities will start spawning on their own
                 {
                     int makeSprite = rand()%500;
-                    if (makeSprite<20) (new Coin(SCREEN_W+1,bottomHeight-rand()%180))->setDisplay(coin);
-                    else if (makeSprite<23) (new Dynamite(SCREEN_W+1, bottomHeight-rand()%180))->setDisplay(dynamite);
-                    else if (makeSprite<24) (new Apple(SCREEN_W+1, bottomHeight-rand()%180))->setDisplay(apple);
+                    if (makeSprite<20) (new Coin(SCREEN_W,bottomHeight-rand()%180))->setDisplay(coin);
+                    else if (makeSprite<23) (new Dynamite(SCREEN_W, bottomHeight-rand()%180))->setDisplay(dynamite);
+                    else if (makeSprite<24) (new Apple(SCREEN_W, bottomHeight-rand()%180))->setDisplay(apple);
+                    else if (makeSprite<28 || key[KEY_Z])
+                    {
+                        /*
+                         *      0
+                         *   --------
+                         * 1 |      | 3
+                         *   |      |
+                         *   --------
+                         *      2
+                         */
+                        int side = rand()%2;
+                        if (side==1) side = 3;
+;
+                        //TODO replace zeroes with negative sprite dimensions
+                        //and also make sprite
+                        int tmpX[4] = {rand()%Entity::MAX_X,-zombie->w,rand()%Entity::MAX_X,Entity::MAX_X-zombie->w};
+                        int tmpY[4] = {-zombie->h,rand()%Entity::MAX_Y,Entity::MAX_Y,rand()%Entity::MAX_Y};
+                        (new Zombie(tmpX[side],tmpY[side]))->setDisplay(zombie);
+                    }
                 }
             }
-            draw_sprite(buffer, helmet, player->getX()+player->getWidth()/2-helmet->w/2, player->getY()-5);
+
+            while (player->hasNextAddon())
+            {
+                Addon it = player->nextAddon();
+                draw_sprite(buffer, it.disp, player->getX()+it.xOffset, player->getY()+it.yOffset);
+            }
+            /*std::list<Addon>::iterator it;
+            for (it = player->addons.begin(); it != player->addons.end(); it++)
+            {
+                draw_sprite(buffer, it->disp, player->getX()+it->xOffset, player->getY()+it->yOffset);
+            }*/
+            /*draw_sprite(buffer, helmet, player->getX()+player->getWidth()/2-helmet->w/2, player->getY()-5);
             draw_sprite(buffer, chestplate, player->getX()+player->getWidth()/2-chestplate->w/2, player->getY()+8);
-            draw_sprite(buffer, cart, cartOffset, bottomHeight+16);
+            draw_sprite(buffer, cart, player->getX()+player->getWidth()/2-cart->w/2, bottomHeight+16);*/
             textprintf_ex(buffer, font, 5, 5, 0xFFFFFF, -1, "Coins: %d", player->getCoins());
+            textprintf_ex(buffer, font, 5, 30, 0xFFFFFF, -1, "%s", ALLEGRO_VERSION_STR);
             acquire_screen();
             blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
             release_screen();
@@ -177,4 +253,4 @@ int main()
     }
     return 0;
 }
-END_OF_MAIN();
+END_OF_MAIN()

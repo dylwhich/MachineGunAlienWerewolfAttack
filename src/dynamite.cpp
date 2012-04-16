@@ -41,3 +41,8 @@ int Dynamite::getMaxHealth()
 {
     return 1;
 }
+
+void Dynamite::interact(Entity* e)
+{
+    //do nothing
+}

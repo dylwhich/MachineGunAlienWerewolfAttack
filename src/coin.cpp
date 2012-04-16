@@ -48,3 +48,8 @@ int Coin::getType()
 {
     return Entity::COIN;
 }
+
+void Coin::interact(Entity* e)
+{
+    //do nothing
+}

@@ -14,6 +14,7 @@ class Apple : public Entity
         void onTouch(Entity* e);
         int getMaxHealth();
         int getType();
+        void interact(Entity* e);
     protected:
     private:
         int speed;

@@ -14,6 +14,7 @@ class Coin : public Entity
         int getMaxHealth();
         void onTouch(Entity* e);
         int getType();
+        void interact(Entity* e);
     protected:
     private:
         int speed, lifetime;
