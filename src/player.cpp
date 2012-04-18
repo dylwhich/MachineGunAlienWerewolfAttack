@@ -39,10 +39,16 @@ void Player::onTouch(Entity* e)
 void Player::onTick()
 {
     if (shotTimer>0) shotTimer--;
-    if (jumping) setY(getY()-40);
+    if (jumping) setY(getY()-40);   //velocity=4*jumpTicks+40
     if (getY()<floorHeight) setY(getY()+4*jumpTicks++);
     if (getY()>floorHeight) setY(floorHeight);
     if (getY()==floorHeight) jumpTicks = 0;
+}
+
+int Player::getVelocity()
+{
+    if (getY()>=floorHeight) return 0;
+    else if (jumping) return (jumpTicks>0)?4*jumpTicks-40:0;
 }
 
 int Player::getType()
@@ -84,7 +90,7 @@ bool Player::isJumping()
 
 int Player::damage(int points)
 {
-    setHealth(getHealth()-(points-armorLevel));
+    if (!invincible) setHealth(getHealth()-(points-armorLevel));
     return getHealth();
 }
 
@@ -101,6 +107,7 @@ bool Player::fire()
 
 void Player::interact(Entity* e)
 {
+    #ifdef DEBUG
     if (attracting)
     {
         if (getX()<e->getX()) e->setX(e->getX()-rand()%10);
@@ -108,4 +115,15 @@ void Player::interact(Entity* e)
         if (getY()<e->getY()) e->setY(e->getY()-rand()%10);
         else e->setY(e->getY()+rand()%10);
     }
+    #endif
+}
+
+void Player::setInvincible(bool v)
+{
+    invincible = v;
+}
+
+bool Player::isInvincible()
+{
+    return invincible;
 }

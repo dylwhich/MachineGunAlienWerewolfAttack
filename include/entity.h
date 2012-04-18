@@ -46,6 +46,7 @@ class Entity
         bool hasNextAddon();
         Addon nextAddon();
         void resetAddons();
+        static int numEntities();
         virtual void interact(Entity* e)=0;
     protected:
         void updateID(unsigned int newID);

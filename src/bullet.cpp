@@ -5,11 +5,11 @@ Bullet::Bullet()
     init();
 }
 
-Bullet::Bullet(int xPos, int yPos, int xCoef, int yCoef) : Entity::Entity(xPos,yPos)
+Bullet::Bullet(int xPos, int yPos, int xCoef, int yCoef, int additX, int additY) : Entity::Entity(xPos,yPos)
 {
     setHealth(getMaxHealth());
-    yVelocity = yCoef * 6;
-    xVelocity = xCoef * 6;
+    yVelocity = yCoef * 6 + additY;
+    xVelocity = xCoef * 6 + additX;
 }
 
 Bullet::~Bullet()

@@ -80,12 +80,12 @@ int main()
     int floorTickTimer = 10;
     //srand(time(0));
 
-    Player* player = new Player(32/*(SCREEN_W-playerSprite->w)/2*/,bottomHeight-playerSprite->h);
+    Player* player = new Player((SCREEN_W-playerSprite->w)/2,bottomHeight-playerSprite->h);
     player->setDisplay(playerSprite);
     player->attachSprite(helmet, (player->getWidth()-helmet->w)/2, -5);
-    //player->attachSprite(chestplate, ))
+    player->attachSprite(cart, (player->getWidth()-cart->w)/2,player->getHeight()-cart->h/2);
 
-    new Tutorial(tutorial1,0/*(SCREEN_W-tutorial1->w)/2*/,SCREEN_H-180-tutorial1->h/2);
+    new Tutorial(tutorial1,(SCREEN_W-tutorial1->w)/2,SCREEN_H-180-tutorial1->h/2);
     new Ambient(lamp);
 
     while (!key[KEY_ESC] && player->getHealth() > 0)
@@ -100,23 +100,27 @@ int main()
         } else
         {
             if (pauseTimer>0) pauseTimer--;
-            if (floorTickTimer>0) floorTickTimer--;
+            /*if (floorTickTimer>0) floorTickTimer--;
             else
             {
                 floorTickTimer=20;
                 player->setFloorHeight(bottomHeight--);
-            }
+            }*/
             //if (key[KEY_W] || key[KEY_UP]) player->setY(player->getY()-5);
             //else if (key[KEY_S] || key[KEY_DOWN]) player->setY(player->getY()+5);
 
             if (key[KEY_SPACE] xor player->isJumping()) player->toggleJumping(key[KEY_SPACE]);
+            #ifdef DEBUG
             if (key[KEY_LCONTROL] xor player->attracting) player->attracting=key[KEY_LCONTROL];
+            if (key[KEY_V]) player->setInvincible(true);
+            if (key[KEY_U]) player->setInvincible(false);
+            #endif
 
             clear_to_color(buffer, 0x000000);
             if (key[KEY_P] && pauseTimer==0)
             {
                 paused = true;
-                textout_ex(buffer, font, "GAME PAUSED", 0, 80, 0xFF0000, -1);
+                textout_ex(buffer, font, "GAME PAUSED", 0, 80, 0xFFFFFF, -1);
             }
                 //begin sprite calculation block
             for (unsigned int i=0; i<Entity::ALL_ENTITIES.size();i++)
@@ -158,22 +162,35 @@ int main()
                 //once the first tutorial is complete, the player is allowed to shoot things
             if (tutorialProgress>0)
             {
-                if ((key[KEY_UP] || key[KEY_DOWN] || key[KEY_LEFT] || key[KEY_RIGHT]) && (player->fire() || key[KEY_LSHIFT])) (new Bullet(player->getX()+player->getWidth()-key[KEY_LEFT]?(player->getWidth()+fireball->w+2):0,player->getY()+3,key[KEY_LEFT]-key[KEY_RIGHT],key[KEY_UP]-key[KEY_DOWN]))->setDisplay(fireball);
+                if ((key[KEY_UP] || key[KEY_DOWN] || key[KEY_LEFT] || key[KEY_RIGHT]) && (player->fire()
+                    #ifdef DEBUG
+                    || key[KEY_LSHIFT]
+                    #endif
+                    )) (new Bullet(player->getX()-fireball->w/2/*player->getX()+player->getWidth()-(key[KEY_LEFT]?(player->getWidth()+fireball->w+2):0)*/,    //X
+                                   player->getY()+3,    //Y
+                                   key[KEY_LEFT]-key[KEY_RIGHT],
+                                   key[KEY_UP]-key[KEY_DOWN],
+                                   0,
+                                   ((key[KEY_UP] || key[KEY_DOWN]) && (player->getVelocity()>0 xor key[KEY_UP]) && (player->getVelocity()<0 xor key[KEY_DOWN]))?player->getVelocity():0))->setDisplay(fireball);
                     //cheaty cheats
+                #ifdef DEBUG
                 if (key[KEY_C] || key[KEY_Y] || key[KEY_L])
                 {
-                        //DEBUG CODE
-                        //TODO: REMOVE
                     if (key[KEY_C]) (new Coin(player->getX()+2*player->getWidth(),player->getY()))->setDisplay(coin);
                     else if (key[KEY_Y]) (new Dynamite(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(dynamite);
                     else if (key[KEY_L]) (new Apple(player->getX()+2*player->getWidth(), player->getY()))->setDisplay(apple);
                 } else if (tutorialProgress>2)  //once both tutorials are done entities will start spawning on their own
+                #endif
                 {
                     int makeSprite = rand()%500;
                     if (makeSprite<20) (new Coin(SCREEN_W,bottomHeight-rand()%180))->setDisplay(coin);
                     else if (makeSprite<23) (new Dynamite(SCREEN_W, bottomHeight-rand()%180))->setDisplay(dynamite);
                     else if (makeSprite<24) (new Apple(SCREEN_W, bottomHeight-rand()%180))->setDisplay(apple);
-                    else if (makeSprite<28 || key[KEY_Z])
+                    else if (makeSprite<28
+                    #ifdef DEBUG
+                    || key[KEY_Z]
+                    #endif
+                    )
                     {
                         /*
                          *      0
@@ -183,12 +200,12 @@ int main()
                          *   --------
                          *      2
                          */
-                        int side = rand()%2;
-                        if (side==1) side = 3;
+                        int side = rand()%3;
+                        if (side==2) side = 3;
 ;
                         //TODO replace zeroes with negative sprite dimensions
                         //and also make sprite
-                        int tmpX[4] = {rand()%Entity::MAX_X,-zombie->w,rand()%Entity::MAX_X,Entity::MAX_X-zombie->w};
+                        int tmpX[4] = {rand()%Entity::MAX_X,-zombie->w,rand()%Entity::MAX_X,Entity::MAX_X};
                         int tmpY[4] = {-zombie->h,rand()%Entity::MAX_Y,Entity::MAX_Y,rand()%Entity::MAX_Y};
                         (new Zombie(tmpX[side],tmpY[side]))->setDisplay(zombie);
                     }
@@ -209,7 +226,9 @@ int main()
             draw_sprite(buffer, chestplate, player->getX()+player->getWidth()/2-chestplate->w/2, player->getY()+8);
             draw_sprite(buffer, cart, player->getX()+player->getWidth()/2-cart->w/2, bottomHeight+16);*/
             textprintf_ex(buffer, font, 5, 5, 0xFFFFFF, -1, "Coins: %d", player->getCoins());
-            textprintf_ex(buffer, font, 5, 30, 0xFFFFFF, -1, "%s", ALLEGRO_VERSION_STR);
+            #ifdef DEBUG
+            textprintf_ex(buffer, font, 5, 40, 0xFFFFFF, -1, "%d (%d calcs/tick)", Entity::numEntities(),Entity::numEntities()*Entity::numEntities());
+            #endif
             acquire_screen();
             blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
             release_screen();

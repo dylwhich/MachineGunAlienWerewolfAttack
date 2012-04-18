@@ -1,4 +1,5 @@
 #include "../include/zombie.h"
+#include <math.h>
 
 Zombie::Zombie()
 {
@@ -31,7 +32,7 @@ void Zombie::onTick()
 {
     if (retreatTime>0) retreatTime--;
     if (damageGrace>0) damageGrace--;
-    setX(getX()-2);
+    //setX(getX()-2);
 }
 
 void Zombie::interact(Entity* e)
@@ -40,10 +41,16 @@ void Zombie::interact(Entity* e)
     {
         if (retreatTime==0)
         {
-            //if (getX()<e->getX()) setX(getX()+1);
-            //else setX(getX()-rand()%3-1);
-            if (getY()<e->getY()) setY(getY()+1);
-            else setY(getY()-1);
+
+            double totalDist = sqrt(
+                                    pow(e->getX()-getX(),2)+
+                                    pow(e->getY()-getY(),2));    ///home/dylan/Documents/Programming/MinecartMadLibs/src/zombie.cpp|47|error: could not convert ‘((double)(((e)->Entity::getX()() - ((Zombie*)this)->Zombie::<unnamed>.getX()()) * ((e)->Entity::getX()() - ((Zombie*)this)->Zombie::<unnamed>.getX()()) + ((e)->Entity::getY()() - ((Zombie*)this)->Zombie::<unnamed>.getY()()) * ((e)->Entity::getY()() - ((Zombie*)this)->Zombie::<unnamed>.getY()())) + 0.0)’ from ‘double’ to ‘fix’|
+
+            int factor = 1;//MAX_X-totalDist;//(int)(totalDist/5.0);
+            if (getX()<e->getX()) setX(getX()+factor);
+            else setX(getX()-factor);
+            if (getY()<e->getY()) setY(getY()+factor);
+            else setY(getY()-factor);
         } else
         {
             setX(getX()+rand()%30-15);

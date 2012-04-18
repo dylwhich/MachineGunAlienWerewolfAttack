@@ -20,13 +20,16 @@ class Player : public Entity
         void setFloorHeight(int height);
         void toggleJumping(bool val);
         bool isJumping();
-        int damage(int points);
+        int damage(int points); //does not work because C++ is lame about polymorphism...
         bool fire();
         bool attracting;
+        void setInvincible(bool v);
+        bool isInvincible();
+        int getVelocity();
     protected:
     private:
         int coins, floorHeight, jumpTicks, armorLevel, shotTimer;
-        bool jumping;
+        bool jumping, invincible;
 };
 
 #endif // PLAYER_H

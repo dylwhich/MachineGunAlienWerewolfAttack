@@ -8,7 +8,7 @@ class Bullet : public Entity
 {
     public:
         Bullet();
-        Bullet(int xPos, int yPos, int xCoef, int yCoef);
+        Bullet(int xPos, int yPos, int xCoef, int yCoef, int additX, int additY);
         virtual ~Bullet();
         void onTick();
         void onTouch(Entity* e);
